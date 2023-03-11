@@ -42,6 +42,15 @@
                           elisp-eldoc-flags-describe-format-flag)
            (function :tag "Custom function"))))
 
+(defcustom elisp-eldoc-flags-completions-functions '(elisp-eldoc-flags-interactive-completion-at-point)
+  "Additional functions to add in `completion-at-point-functions'."
+  :group 'autofix
+  :type '(repeat
+          (radio
+           (function-item :tag "Complete interactive flags"
+                          elisp-eldoc-flags-interactive-completion-at-point)
+           (function :tag "Custom function"))))
+
 (defvar elisp-eldoc-flags-eldoc-format-flags-alist
   '(("%s" .
      "means produce a string argument. Actually, produces any object with princ")
@@ -171,6 +180,56 @@
                       (elisp-eldoc-flags-split-to-interactive-flags str)
                       "\n"))))
          (message msg))))))
+
+(defun elisp-eldoc-flags-interactive-completion-at-point ()
+  "Complete inside string in the `interactive' form.
+Addional function for `completion-at-point-functions' in `emacs-lisp-mode'."
+  (when-let* ((start (let ((pps (syntax-ppss (point))))
+                       (when (and (nth 3 pps)
+                                  (nth 8 pps))
+                         (save-excursion
+                           (goto-char (nth 8 pps))
+                           (when (looking-back "[(]interactive[\s\t\n]?+" 0)
+                             (1+ (nth 8 pps)))))))
+              (end (point)))
+    (let ((terminator (and
+                       (> end start)
+                       (not (looking-back "\\n" 0)))))
+      (list
+       end
+       end
+       (apply-partially 'completion-table-with-terminator
+                        "\n"
+                        (if terminator
+                            (list "\\n")
+                          (mapcar 'car
+                                  elisp-eldoc-flags-interactive-flags-alist)))
+       :predicate (lambda (a)
+                    (if (= start end)
+                        t
+                      (not (member a '("@" "*" "^")))))
+       :annotation-function
+       (lambda (str)
+         (or (cdr (assoc str elisp-eldoc-flags-interactive-flags-alist))
+             " terminator"))))))
+
+
+;;;###autoload
+(defun elisp-eldoc-flags-add-completion-functions ()
+  "Add `elisp-eldoc-flags-completions-functions' to completions at point."
+  (interactive)
+  (dolist (fn elisp-eldoc-flags-completions-functions)
+    (add-hook 'completion-at-point-functions
+              fn nil 'local)))
+
+;;;###autoload
+(defun elisp-eldoc-flags-remove-completion-functions ()
+  "Remove `elisp-eldoc-flags-completions-functions' from completions at point."
+  (interactive)
+  (dolist (fn elisp-eldoc-flags-completions-functions)
+    (remove-hook 'completion-at-point-functions
+                 fn 'local)))
+
 
 ;;;###autoload
 (defun elisp-eldoc-flags-add-eldoc-functions ()

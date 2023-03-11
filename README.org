@@ -1,6 +1,7 @@
 * elisp-eldoc-flags
 
-Additional Eldoc functions for ~emacs-lisp-mode~.
+
+Additional Eldoc and completion functions for ~emacs-lisp-mode~.
 
 ** Installation
 
@@ -28,21 +29,29 @@ Add the downloaded directory to the load path:
              :repo "KarimAziev/elisp-eldoc-flags"
              :type git
              :host github)
-  :hook (emacs-lisp-mode . elisp-eldoc-flags-add-eldoc-functions))
+  :hook ((emacs-lisp-mode . elisp-eldoc-flags-add-eldoc-functions)
+         (emacs-lisp-mode . elisp-eldoc-flags-add-completion-functions)))
 #+end_src
 
-** Commands
+** Elcoc Commands
 
-*** ~elisp-eldoc-flags-remove-eldoc-functions~
-Remove =elisp-eldoc-flags-functions= to =eldoc-documentation-functions=.
-*** ~elisp-eldoc-flags-add-eldoc-functions~
-Add =elisp-eldoc-flags-functions= to =eldoc-documentation-functions=.
-** Customization
+*** elisp-eldoc-flags-add-eldoc-functions
 
-*** ~elisp-eldoc-flags-functions~
-List of functions to add with =elisp-eldoc-flags-add-eldoc-functions=:
+Add extra functions to =eldoc-documentation-functions=. This functions are listed in the custom variable =elisp-eldoc-flags-functions= with default value:
 
-**** ~elisp-eldoc-flags-describe-interactive-flag~
-Show description for interactive form at point.
-**** ~elisp-eldoc-flags-describe-format-flag~ 
-Show description for =format= flags inside string.
+- ~elisp-eldoc-flags-describe-interactive-flag~ Describe arg-descriptor inside =interactive= calls.
+- ~elisp-eldoc-flags-describe-format-flag~ Describe %-sequences inside string.
+
+*** elisp-eldoc-flags-remove-eldoc-functions
+
+Remove =elisp-eldoc-flags-functions= from =eldoc-documentation-functions=.
+
+** Completions commands
+*** elisp-eldoc-flags-add-completion-functions
+
+Add extra functions to completions at point. This functions are listed in the custom variable =elisp-eldoc-flags-completions-functions= with default value:
+
+- ~elisp-eldoc-flags-interactive-completion-at-point~ which completes inside string in the ~interactive~ form.
+
+*** elisp-eldoc-flags-remove-completion-functions
+Remove =elisp-eldoc-flags-completions-functions= from completions at point.
