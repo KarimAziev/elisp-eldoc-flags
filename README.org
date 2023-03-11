@@ -1,0 +1,48 @@
+* elisp-eldoc-flags
+
+Additional Eldoc functions for ~emacs-lisp-mode~.
+
+** Installation
+
+Emacs >= 26.1 is required.
+
+*** Manual
+
+Download the source code and put it wherever you like, e.g. into =~/.emacs.d/elisp-eldoc-flags/=
+
+#+begin_src shell :eval no
+git clone https://github.com/KarimAziev/elisp-eldoc-flags.git ~/.emacs.d/elisp-eldoc-flags/
+#+end_src
+
+Add the downloaded directory to the load path:
+
+#+begin_src elisp :eval no
+(add-to-list 'load-path "~/.emacs.d/elisp-eldoc-flags/")
+(require 'elisp-eldoc-flags)
+(add-hook 'emacs-lisp-mode-hook #'elisp-eldoc-flags-add-eldoc-functions)
+#+end_src
+
+#+begin_src elisp :eval no
+(use-package elisp-eldoc-flags
+  :straight (elisp-eldoc-flags
+             :repo "KarimAziev/elisp-eldoc-flags"
+             :type git
+             :host github)
+  :hook (emacs-lisp-mode . elisp-eldoc-flags-add-eldoc-functions))
+#+end_src
+
+** Commands
+
+*** ~elisp-eldoc-flags-remove-eldoc-functions~
+Remove =elisp-eldoc-flags-functions= to =eldoc-documentation-functions=.
+*** ~elisp-eldoc-flags-add-eldoc-functions~
+Add =elisp-eldoc-flags-functions= to =eldoc-documentation-functions=.
+** Customization
+
+*** ~elisp-eldoc-flags-functions~
+List of functions to add with =elisp-eldoc-flags-add-eldoc-functions=:
+
+**** ~elisp-eldoc-flags-describe-interactive-flag~
+Show description for interactive form at point.
+**** ~elisp-eldoc-flags-describe-format-flag~ 
+Show description for =format= flags inside string.
