@@ -33,7 +33,7 @@
 (defcustom elisp-eldoc-flags-functions '(elisp-eldoc-flags-describe-interactive-flag
                                          elisp-eldoc-flags-describe-format-flag)
   "List of functions to add with `elisp-eldoc-flags-add-eldoc-functions'."
-  :group 'autofix
+  :group 'elisp-eldoc-flags
   :type '(repeat
           (radio
            (function-item :tag "Describe interactive flags"
@@ -44,7 +44,7 @@
 
 (defcustom elisp-eldoc-flags-completions-functions '(elisp-eldoc-flags-interactive-completion-at-point)
   "Additional functions to add in `completion-at-point-functions'."
-  :group 'autofix
+  :group 'elisp-eldoc-flags
   :type '(repeat
           (radio
            (function-item :tag "Complete interactive flags"
