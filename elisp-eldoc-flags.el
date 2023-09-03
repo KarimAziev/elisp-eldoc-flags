@@ -7,6 +7,7 @@
 ;; Version: 0.1.0
 ;; Keywords: lisp
 ;; Package-Requires: ((emacs "26.1"))
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -30,25 +31,28 @@
 ;;; Code:
 
 
-(defcustom elisp-eldoc-flags-functions '(elisp-eldoc-flags-describe-interactive-flag
-                                         elisp-eldoc-flags-describe-format-flag)
+(defcustom elisp-eldoc-flags-functions
+  '(elisp-eldoc-flags-describe-interactive-flag
+    elisp-eldoc-flags-describe-format-flag
+    elisp-eldoc-flags-describe-package-keyword)
   "List of functions to add with `elisp-eldoc-flags-add-eldoc-functions'."
   :group 'elisp-eldoc-flags
   :type '(repeat
           (radio
-           (function-item :tag "Describe interactive flags"
-                          elisp-eldoc-flags-describe-interactive-flag)
-           (function-item :tag "Describe format flags "
-                          elisp-eldoc-flags-describe-format-flag)
+           (function-item elisp-eldoc-flags-describe-interactive-flag)
+           (function-item elisp-eldoc-flags-describe-format-flag)
+           (function-item elisp-eldoc-flags-describe-package-keyword)
            (function :tag "Custom function"))))
 
-(defcustom elisp-eldoc-flags-completions-functions '(elisp-eldoc-flags-interactive-completion-at-point)
+(defcustom elisp-eldoc-flags-completions-functions
+  '(elisp-eldoc-flags-interactive-completion-at-point
+    elisp-eldoc-flags-complete-keywords)
   "Additional functions to add in `completion-at-point-functions'."
   :group 'elisp-eldoc-flags
   :type '(repeat
           (radio
-           (function-item :tag "Complete interactive flags"
-                          elisp-eldoc-flags-interactive-completion-at-point)
+           (function-item elisp-eldoc-flags-interactive-completion-at-point)
+           (function-item elisp-eldoc-flags-complete-keywords)
            (function :tag "Custom function"))))
 
 (defvar elisp-eldoc-flags-eldoc-format-flags-alist
@@ -138,6 +142,71 @@
                                   "\n" t)))
     (append special-flags restflags)))
 
+(defvar elisp-eldoc-flags-keywords-alist nil)
+
+(defun elisp-eldoc-flags-describe-package-keyword (&optional _callback &rest
+                                                             _ignored)
+  "Eldoc function for package keywords in comments header."
+  (let ((pps (syntax-ppss (point))))
+    (when (and (nth 4 pps)
+               (nth 8 pps)
+               (save-excursion
+                 (goto-char (nth 8 pps))
+                 (looking-at ";; Keywords:")))
+      (let*
+          ((flag (save-excursion
+                   (skip-chars-backward "^\s\t\f\r\n;,")
+                   (thing-at-point 'symbol t)))
+           (descr
+            (and flag
+                 (cdr
+                  (assoc-string flag
+                                (or elisp-eldoc-flags-keywords-alist
+                                    (elisp-eldoc-flags-init-finder-keywords)))))))
+        (when descr
+          (message "%s: %s" (propertize flag 'face 'font-lock-doc-face)
+                   descr))))))
+
+(defun elisp-eldoc-flags-init-finder-keywords ()
+  "Initialize the `elisp-eldoc-flags-keywords-alist' with `finder-known-keywords'."
+  (unless elisp-eldoc-flags-keywords-alist
+    (setq elisp-eldoc-flags-keywords-alist
+          (when
+              (progn
+                (require 'finder nil
+                         t)
+                (bound-and-true-p finder-known-keywords))
+            (mapcar (lambda (it)
+                      (cons (symbol-name (car
+                                          it))
+                            (cdr it)))
+                    finder-known-keywords)))))
+
+(defun elisp-eldoc-flags-complete-keywords ()
+  "Completion at point function for package keywords in comments header."
+  (when-let* ((start
+               (let ((pps (syntax-ppss (point))))
+                 (when (and (nth 4 pps)
+                            (nth 8 pps)
+                            (save-excursion
+                              (goto-char (nth 8 pps))
+                              (looking-at ";; Keywords:")))
+                   (save-excursion
+                     (skip-chars-backward "^\s\t\f\r\n;,")
+                     (point)))))
+              (end (point)))
+    (list
+     start
+     end
+     (completion-table-dynamic
+      (lambda (&rest _)
+        (elisp-eldoc-flags-init-finder-keywords)
+        (mapcar #'car elisp-eldoc-flags-keywords-alist)))
+     :annotation-function
+     (lambda (str)
+       (or (cdr (assoc str elisp-eldoc-flags-keywords-alist))
+           " ")))))
+
 (defun elisp-eldoc-flags-describe-interactive-flag (&optional _callback &rest
                                                               _ignored)
   "Show description for interactive form at point."
@@ -181,33 +250,40 @@
                       "\n"))))
          (message msg))))))
 
+(defun elisp-eldoc-flags-interactive-string-start ()
+  "Return position of string start after symbol `interactive'."
+  (let* ((pps (syntax-ppss (point)))
+         (str-beg (nth 8 pps)))
+    (when (and
+           str-beg
+           (nth 3 pps))
+      (save-excursion
+        (goto-char (nth 8 pps))
+        (save-excursion
+          (goto-char (nth 8 pps))
+          (skip-chars-backward "\s\t\r\n\f")
+          (when (looking-back "[(]interactive" 0)
+            (1+ (nth 8 pps))))))))
+
+
 (defun elisp-eldoc-flags-interactive-completion-at-point ()
   "Complete inside string in the `interactive' form.
 Addional function for `completion-at-point-functions' in `emacs-lisp-mode'."
-  (when-let* ((start (let ((pps (syntax-ppss (point))))
-                       (when (and (nth 3 pps)
-                                  (nth 8 pps))
-                         (save-excursion
-                           (goto-char (nth 8 pps))
-                           (when (looking-back "[(]interactive[\s\t\n]?+" 0)
-                             (1+ (nth 8 pps)))))))
+  (when-let* ((start
+               (elisp-eldoc-flags-interactive-string-start))
               (end (point)))
     (let ((terminator (and
                        (> end start)
-                       (not (looking-back "\\n" 0)))))
+                       (not (looking-back "\\\\n" 0)))))
       (list
        end
        end
-       (apply-partially 'completion-table-with-terminator
+       (apply-partially #'completion-table-with-terminator
                         "\n"
                         (if terminator
                             (list "\\n")
-                          (mapcar 'car
+                          (mapcar #'car
                                   elisp-eldoc-flags-interactive-flags-alist)))
-       :predicate (lambda (a)
-                    (if (= start end)
-                        t
-                      (not (member a '("@" "*" "^")))))
        :annotation-function
        (lambda (str)
          (or (cdr (assoc str elisp-eldoc-flags-interactive-flags-alist))
