@@ -34,7 +34,8 @@
 (defcustom elisp-eldoc-flags-functions
   '(elisp-eldoc-flags-describe-interactive-flag
     elisp-eldoc-flags-describe-format-flag
-    elisp-eldoc-flags-describe-package-keyword)
+    elisp-eldoc-flags-describe-package-keyword
+    elisp-eldoc-flags-fn-docstring)
   "List of functions to add with `elisp-eldoc-flags-add-eldoc-functions'."
   :group 'elisp-eldoc-flags
   :type '(repeat
@@ -289,6 +290,22 @@ Addional function for `completion-at-point-functions' in `emacs-lisp-mode'."
          (or (cdr (assoc str elisp-eldoc-flags-interactive-flags-alist))
              " terminator"))))))
 
+(defun elisp-eldoc-flags-fn-docstring (callback &rest _ignored)
+  "Display the first line of a function's documentation.
+
+Argument CALLBACK is a function to be called with the docstring.
+
+Remaining arguments _IGNORED are not used within the function."
+  (let* ((sym (elisp--current-symbol))
+         (docstring (and sym
+                         (cond ((not sym) nil)
+                               ((fboundp sym)
+                                (when-let ((doc (documentation sym t)))
+                                  (elisp--docstring-first-line doc)))))))
+    (when docstring
+      (funcall callback docstring
+               :thing sym
+               :face 'font-lock-function-name-face))))
 
 ;;;###autoload
 (defun elisp-eldoc-flags-add-completion-functions ()
