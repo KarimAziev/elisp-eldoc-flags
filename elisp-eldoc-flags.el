@@ -100,23 +100,20 @@
     ("C" . "Command name: symbol with interactive function definition")
     ("d" . "Value of point as number.  Does not do I/O")
     ("D" . "Directory name")
-    ("e" .
-     "Parameterized event (i.e., one that's a list) that invoked this command")
+    ("e" . "Parameterized event (i.e., one that's a list) that invoked this command")
     ("f" . "Existing file name")
     ("F" . "Possibly nonexistent file name")
     ("G" . "Possibly nonexistent file name, defaulting to just directory name")
     ("i" . "Ignored, i.e. always nil.  Does not do I/O")
-    ("k" .
-     "Key sequence (downcase the last event if needed to get a definition)")
+    ("k" . "Key sequence (downcase the last event if needed to get a definition)")
     ("K" . "Key sequence to be redefined (do not downcase the last event)")
     ("m" . "Value of mark as number.  Does not do I/O")
     ("M" . "Any string.  Inherits the current input method")
     ("n" . "Number read using minibuffer")
     ("N" . "Numeric prefix arg, or if none, do like code n")
-    ("p" . "Prefix arg converted to number.  Does not do I/O")
-    ("P" . "Prefix arg in raw form.  Does not do I/O")
-    ("r" .
-     "Region: point and mark as 2 numeric args, smallest first.  Does no I/O")
+    ("p" . "Prefix arg converted to number (default is `1').  Does not do I/O")
+    ("P" . "Prefix arg in raw form (default is `nil').  Does not do I/O")
+    ("r" . "Region: point and mark as 2 numeric args, smallest first.  Does no I/O")
     ("s" . "Any string.  Does not inherit the current input method")
     ("S" . "Any symbol")
     ("U" . "Mouse up event discarded by a previous k or K argument")
@@ -126,10 +123,8 @@
     ("z" . "Coding system")
     ("Z" . "Coding system, nil if no prefix arg")
     ("*" . "an error is signaled if the buffer is read-only")
-    ("@" .
-     "appears at the beginning of the string, and if the key sequence\nused to invoke the command includes any mouse events, then the window associated with\nthe first of those events is selected before the command is run")
-    ("^" .
-     "If the string begins with `^' and `shift-select-mode' is non-nil,Emacs first calls the function `handle-shift-selection'")))
+    ("@" . "appears at the beginning of the string, and if the key sequence\nused to invoke the command includes any mouse events, then the window associated with\nthe first of those events is selected before the command is run")
+    ("^" . "If the string begins with `^' and `shift-select-mode' is non-nil,Emacs first calls the function `handle-shift-selection'")))
 
 (defun elisp-eldoc-flags-split-to-interactive-flags (str)
   "Split string STR into interactive flags."
