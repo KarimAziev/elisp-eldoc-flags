@@ -295,7 +295,10 @@ Remaining arguments _IGNORED are not used within the function."
          (docstring (and sym
                          (cond ((not sym) nil)
                                ((fboundp sym)
-                                (when-let ((doc (documentation sym t)))
+                                (when-let ((doc (documentation
+                                                 (symbol-function
+                                                  sym)
+                                                 'raw)))
                                   (elisp--docstring-first-line doc)))))))
     (when docstring
       (funcall callback docstring
