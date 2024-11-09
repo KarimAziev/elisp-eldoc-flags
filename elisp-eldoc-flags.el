@@ -218,7 +218,7 @@
                      (sexp-at-point))))))
     (pcase sym
       ('interactive
-       (when-let ((msg
+       (when-let* ((msg
                    (when (stringp str)
                      (mapconcat
                       (lambda (it)
@@ -295,7 +295,7 @@ Remaining arguments _IGNORED are not used within the function."
          (docstring (and sym
                          (cond ((not sym) nil)
                                ((fboundp sym)
-                                (when-let ((doc (documentation
+                                (when-let* ((doc (documentation
                                                  (symbol-function
                                                   sym)
                                                  'raw)))
